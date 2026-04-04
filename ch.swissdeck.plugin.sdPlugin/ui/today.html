@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Today — Swiss Deck</title>
+	<style>
+		body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; color: #ccc; background: #2d2d2d; margin: 0; padding: 10px; }
+		.field { margin-bottom: 12px; }
+		label { display: block; margin-bottom: 4px; color: #999; font-size: 11px; text-transform: uppercase; }
+		input { width: 100%; box-sizing: border-box; padding: 6px 8px; border-radius: 4px; border: 1px solid #444; background: #1a1a1a; color: #eee; font-size: 12px; }
+		input:focus { border-color: #0078d4; outline: none; }
+		.hint { font-size: 10px; color: #777; margin-top: 3px; }
+		.location { padding: 8px; background: #1a1a1a; border-radius: 4px; margin-top: 8px; color: #8bc34a; font-size: 12px; display: none; }
+	</style>
+</head>
+<body>
+	<div class="field">
+		<label>Postal Code (PLZ)</label>
+		<input type="text" id="plz" placeholder="e.g. 8002" maxlength="4" />
+		<div class="hint">Enter your Swiss PLZ</div>
+	</div>
+	<div id="location" class="location"></div>
+	<script>
+		var ws, uuid, ai, s = {};
+		function connectElgatoStreamDeckSocket(port, u, reg, info, ais) {
+			uuid = u; ai = JSON.parse(ais); s = ai.payload.settings || {};
+			if (s.plz) { document.getElementById("plz").value = s.plz; }
+			if (s.municipality) { var el = document.getElementById("location"); el.textContent = s.municipality; el.style.display = "block"; }
+			ws = new WebSocket("ws://127.0.0.1:" + port);
+			ws.onopen = function() { ws.send(JSON.stringify({ event: reg, uuid: u })); };
+			ws.onmessage = function(e) {
+				var m = JSON.parse(e.data);
+				if (m.event === "sendToPropertyInspector") {
+					var d = m.payload;
+					if (d.event === "plzResolved" && d.station) {
+						s.stationId = d.station.id;
+						s.stationName = d.station.name;
+						s.stationLat = d.station.lat;
+						s.stationLon = d.station.lon;
+						if (d.station.municipality) s.municipality = d.station.municipality;
+						if (d.station.plzLat) s.plzLat = d.station.plzLat;
+						if (d.station.plzLon) s.plzLon = d.station.plzLon;
+						s.plz = document.getElementById("plz").value;
+						save();
+						var el = document.getElementById("location");
+						el.textContent = d.station.municipality || d.station.name;
+						el.style.display = "block";
+					}
+				}
+			};
+		}
+		function save() { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ event: "setSettings", context: uuid, payload: s })); }
+		function send(p) { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ event: "sendToPlugin", action: ai.action, context: uuid, payload: p })); }
+		var t;
+		document.getElementById("plz").addEventListener("input", function() {
+			clearTimeout(t); var v = this.value.trim();
+			if (/^\d{4}$/.test(v)) t = setTimeout(function() { send({ event: "resolvePLZ", plz: v }); }, 300);
+		});
+	</script>
+	<hr style="border:0;border-top:1px solid #444;margin:14px 0" />
+	<div style="font-size:10px;color:#666">Data: <a href="https://open-meteo.com/" style="color:#777">Open-Meteo</a> &middot; <a href="https://www.meteoswiss.admin.ch/" style="color:#777">MeteoSwiss</a> OGD &middot; <a href="https://www.swisstopo.admin.ch/" style="color:#777">swisstopo</a></div>
+</body>
+</html>

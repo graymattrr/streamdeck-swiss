@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Swiss Deck — Icon Preview</title>
+<style>
+body { background: #121212; color: #fff; font-family: -apple-system, sans-serif; padding: 20px; }
+h2 { color: #90CAF9; margin-top: 30px; }
+.grid { display: flex; flex-wrap: wrap; gap: 16px; }
+.tile { width: 144px; }
+.tile svg { border-radius: 8px; }
+.tile p { text-align: center; font-size: 11px; color: #888; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<h1>Swiss Deck — Tile Preview</h1>
+<p style="color:#888">All tiles at native 144×144 resolution</p>
+
+<h2>Weather Icons</h2>
+<div class="grid" id="weather"></div>
+
+<h2>Waste Collection Icons</h2>
+<div class="grid" id="waste"></div>
+
+<h2>Pollen States</h2>
+<div class="grid" id="pollen"></div>
+
+
+<script type="module">
+// Inline the rendering functions to preview without Stream Deck runtime
+const W = 144, H = 144;
+const BG_TOP = "#1a1a2e", BG_BOT = "#16213e";
+
+function svgWrap(content) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="${BG_TOP}"/><stop offset="100%" stop-color="${BG_BOT}"/>
+</linearGradient></defs>
+<rect width="${W}" height="${H}" fill="url(#bg)" rx="8"/>
+${content}
+</svg>`;
+}
+
+function addTile(container, svg, label) {
+  const div = document.createElement("div");
+  div.className = "tile";
+  div.innerHTML = svg + `<p>${label}</p>`;
+  document.getElementById(container).appendChild(div);
+}
+
+// === Weather icons ===
+function sun(cx, cy, size=20) {
+  const r = size*0.35, inner = r+3, outer = inner + size*0.22;
+  const rays = [0,45,90,135,180,225,270,315].map(a => {
+    const rad = a*Math.PI/180;
+    return `<line x1="${(cx+inner*Math.sin(rad)).toFixed(1)}" y1="${(cy-inner*Math.cos(rad)).toFixed(1)}" x2="${(cx+outer*Math.sin(rad)).toFixed(1)}" y2="${(cy-outer*Math.cos(rad)).toFixed(1)}" stroke="#FFD700" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join("");
+  return `<g>${rays}<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFD700"/></g>`;
+}
+function cloud(cx, cy, size=24, color="#D1D9E6") {
+  const s = size/24, x = cx-12*s, y = cy-4*s;
+  return `<path d="M${x+6*s},${y+10*s} a${5*s},${5*s} 0 0,1 0,${-10*s} a${7*s},${7*s} 0 0,1 ${12*s},${-3*s} a${5.5*s},${5.5*s} 0 0,1 ${8*s},${5*s} a${4*s},${4*s} 0 0,1 ${-1*s},${8*s} Z" fill="${color}"/>`;
+}
+function rainDrops(cx, cy, count=3, heavy=false) {
+  const color = heavy ? "#2980D9" : "#5DADE2", len = heavy ? 9 : 6, w = heavy ? 2.2 : 1.8, spacing = 9;
+  const startX = cx - (count-1)*spacing/2;
+  return Array.from({length: count}).map((_,i) => {
+    const dx = startX + i*spacing;
+    return `<line x1="${dx}" y1="${cy}" x2="${dx-2}" y2="${cy+len}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`;
+  }).join("");
+}
+function snowflakes(cx, cy, count=3) {
+  const spacing=10, startX = cx-(count-1)*spacing/2;
+  return Array.from({length: count}).map((_,i) => {
+    const sx = startX+i*spacing, sy = cy, r = 3;
+    return `<g stroke="#E8EAF6" stroke-width="1.5" stroke-linecap="round">
+      <line x1="${sx}" y1="${sy-r}" x2="${sx}" y2="${sy+r}"/>
+      <line x1="${sx-r*.87}" y1="${sy-r*.5}" x2="${sx+r*.87}" y2="${sy+r*.5}"/>
+      <line x1="${sx-r*.87}" y1="${sy+r*.5}" x2="${sx+r*.87}" y2="${sy-r*.5}"/>
+    </g>`;
+  }).join("");
+}
+function fogLines(cx, cy) {
+  return [28,22,26].map((w,i) => `<line x1="${cx-w/2}" y1="${cy+i*8}" x2="${cx+w/2}" y2="${cy+i*8}" stroke="#90A4AE" stroke-width="3" stroke-linecap="round" opacity="${0.8-i*0.15}"/>`).join("");
+}
+function lightning(cx, cy) {
+  return `<path d="M${cx+1},${cy} L${cx-4},${cy+8} L${cx},${cy+8} L${cx-2},${cy+16} L${cx+5},${cy+6} L${cx+1},${cy+6} Z" fill="#FDD835" stroke="#F9A825" stroke-width="0.5"/>`;
+}
+
+const weatherIcons = {
+  clear: (cx,cy) => sun(cx,cy),
+  "mostly-clear": (cx,cy) => sun(cx-6,cy-3,16)+cloud(cx+5,cy+5,18),
+  "partly-cloudy": (cx,cy) => sun(cx-5,cy-5,14)+cloud(cx+3,cy+3,22),
+  overcast: (cx,cy) => cloud(cx-3,cy+2,20,"#90A4AE")+cloud(cx+3,cy-2,26,"#B0BEC5"),
+  fog: (cx,cy) => fogLines(cx,cy),
+  rain: (cx,cy) => cloud(cx,cy-6,24)+rainDrops(cx,cy+8,3),
+  "heavy-rain": (cx,cy) => cloud(cx,cy-6,24,"#90A4AE")+rainDrops(cx,cy+8,4,true),
+  snow: (cx,cy) => cloud(cx,cy-6,24)+snowflakes(cx,cy+10,3),
+  thunderstorm: (cx,cy) => cloud(cx,cy-8,26,"#78909C")+lightning(cx,cy+4)+rainDrops(cx,cy+16,2,true),
+};
+
+// Weather tiles with sample data
+for (const [key, fn] of Object.entries(weatherIcons)) {
+  const icon = fn(W/2, 36);
+  const svg = svgWrap(`${icon}<text x="${W/2}" y="92" text-anchor="middle" font-family="sans-serif" font-size="36" font-weight="bold" fill="#FFFFFF">12°</text><text x="${W/2}" y="122" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#A0AEC0">H:16° L:8°</text>`);
+  addTile("weather", svg, key);
+}
+
+// === Waste icons ===
+const F = "#FFFFFF";
+function trashBin(cx,cy) { const x=cx-10,y=cy-12; return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M${x+3},${y+6} L${x+5},${y+24} L${x+17},${y+24} L${x+19},${y+6}"/><line x1="${x+1}" y1="${y+6}" x2="${x+21}" y2="${y+6}"/><path d="M${x+8},${y+6} L${x+8},${y+3} L${x+14},${y+3} L${x+14},${y+6}"/><line x1="${x+8}" y1="${y+10}" x2="${x+9}" y2="${y+20}"/><line x1="${x+11}" y1="${y+10}" x2="${x+11}" y2="${y+20}"/><line x1="${x+14}" y1="${y+10}" x2="${x+13}" y2="${y+20}"/></g>`; }
+function leafIcon(cx,cy) { return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M${cx},${cy+12} C${cx-12},${cy+2} ${cx-8},${cy-14} ${cx+2},${cy-12} C${cx+12},${cy-10} ${cx+12},${cy+2} ${cx},${cy+12} Z"/><path d="M${cx},${cy+12} C${cx-2},${cy+4} ${cx-2},${cy-4} ${cx+2},${cy-10}"/></g>`; }
+function boxIcon(cx,cy) { const x=cx-11,y=cy-11; return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="${x}" y="${y+6}" width="22" height="18" rx="1"/><line x1="${x}" y1="${y+6}" x2="${x+4}" y2="${y}"/><line x1="${x+22}" y1="${y+6}" x2="${x+26}" y2="${y}"/><line x1="${x+4}" y1="${y}" x2="${x+26}" y2="${y}"/><line x1="${x+22}" y1="${y+24}" x2="${x+26}" y2="${y+18}"/><line x1="${x+26}" y1="${y}" x2="${x+26}" y2="${y+18}"/><line x1="${x+11}" y1="${y+6}" x2="${x+11}" y2="${y+24}"/></g>`; }
+function paperIcon(cx,cy) { const x=cx-9,y=cy-12; return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="${x+2}" y="${y+4}" width="16" height="20" rx="1"/><path d="M${x+4},${y+2} L${x+20},${y+2} L${x+20},${y+22}"/><line x1="${x+6}" y1="${y+10}" x2="${x+14}" y2="${y+10}"/><line x1="${x+6}" y1="${y+14}" x2="${x+14}" y2="${y+14}"/><line x1="${x+6}" y1="${y+18}" x2="${x+11}" y2="${y+18}"/></g>`; }
+function bottleIcon(cx,cy) { return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M${cx-3},${cy-12} L${cx-3},${cy-6} L${cx-7},${cy} L${cx-7},${cy+10} Q${cx-7},${cy+13} ${cx-4},${cy+13} L${cx+4},${cy+13} Q${cx+7},${cy+13} ${cx+7},${cy+10} L${cx+7},${cy} L${cx+3},${cy-6} L${cx+3},${cy-12} Z"/><line x1="${cx-4}" y1="${cy-12}" x2="${cx+4}" y2="${cy-12}"/></g>`; }
+function boltIcon(cx,cy) { const r=10; const pts=Array.from({length:6},(_,i)=>{const a=Math.PI/3*i-Math.PI/6; return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`;}).join(" "); return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linejoin="round"><polygon points="${pts}"/><circle cx="${cx}" cy="${cy}" r="4.5"/></g>`; }
+function shirtIcon(cx,cy) { const x=cx-12,y=cy-10; return `<g fill="none" stroke="${F}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M${x+6},${y} L${x},${y+4} L${x+4},${y+10} L${x+8},${y+7} L${x+8},${y+22} L${x+16},${y+22} L${x+16},${y+7} L${x+20},${y+10} L${x+24},${y+4} L${x+18},${y} Z"/><path d="M${x+6},${y} Q${x+12},${y+5} ${x+18},${y}"/></g>`; }
+
+const wasteTypes = [
+  { key: "waste", fn: trashBin, color: "#607D8B", name: "Waste" },
+  { key: "organic", fn: leafIcon, color: "#4CAF50", name: "Organic" },
+  { key: "cardboard", fn: boxIcon, color: "#795548", name: "Cardboard" },
+  { key: "paper", fn: paperIcon, color: "#2196F3", name: "Paper" },
+  { key: "glass", fn: bottleIcon, color: "#00BCD4", name: "Glass" },
+  { key: "metal", fn: boltIcon, color: "#9E9E9E", name: "Metal" },
+  { key: "textile", fn: shirtIcon, color: "#E91E63", name: "Textiles" },
+];
+
+for (const {key, fn, color, name} of wasteTypes) {
+  const icon = fn(W/2, 38);
+  const svg = svgWrap(`<circle cx="${W/2}" cy="38" r="26" fill="${color}" opacity="0.9"/>${icon}<text x="${W/2}" y="85" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#FFFFFF">${name}</text><text x="${W/2}" y="108" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#A0AEC0">Tomorrow</text>`);
+  addTile("waste", svg, key);
+}
+
+// === Pollen (all clear + elevated) ===
+const pollenClear = svgWrap(`
+  <text x="${W/2}" y="18" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#718096">Pollen</text>
+  <circle cx="${W/2}" cy="58" r="24" fill="#4CAF50" opacity="0.9"/>
+  <path d="M${W/2-10},${58} L${W/2-3},${65} L${W/2+12},${48}" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="${W/2}" y="108" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#A0AEC0">All clear</text>
+  <text x="${W/2}" y="126" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#718096">Zürich (PZH)</text>
+`);
+addTile("pollen", pollenClear, "All clear");
+
+const pollenHigh = svgWrap(`
+  <text x="10" y="16" font-family="sans-serif" font-size="14" fill="#718096">Pollen</text>
+  <circle cx="${W-18}" cy="13" r="9" fill="#F44336" opacity="0.9"/>
+  <text x="10" y="42" font-family="sans-serif" font-size="14" fill="#CCCCCC">Birch</text>
+  <rect x="10" y="47" width="45" height="9" rx="2.5" fill="#F44336" opacity="0.85"/>
+  <text x="80" y="56" font-family="sans-serif" font-size="14" font-weight="bold" fill="#F44336">156</text>
+  <text x="10" y="76" font-family="sans-serif" font-size="14" fill="#CCCCCC">Grasses</text>
+  <rect x="10" y="81" width="15" height="9" rx="2.5" fill="#FF9800" opacity="0.85"/>
+  <text x="80" y="90" font-family="sans-serif" font-size="14" font-weight="bold" fill="#FF9800">42</text>
+  <text x="10" y="110" font-family="sans-serif" font-size="14" fill="#CCCCCC">Alder</text>
+  <rect x="10" y="115" width="8" height="9" rx="2.5" fill="#FF9800" opacity="0.85"/>
+  <text x="80" y="124" font-family="sans-serif" font-size="14" font-weight="bold" fill="#FF9800">18</text>
+`);
+addTile("pollen", pollenHigh, "Elevated (3 max)");
+
+</script>
+</body>
+</html>

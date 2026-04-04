@@ -1,0 +1,6 @@
+node_modules/
+ch.swissdeck.plugin.sdPlugin/bin/
+ch.swissdeck.plugin.sdPlugin/logs/
+*.streamDeckPlugin
+*.tgz
+.DS_Store

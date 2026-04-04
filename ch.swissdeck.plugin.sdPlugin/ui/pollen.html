@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Pollen — Swiss Deck</title>
+	<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px;color:#ccc;background:#2d2d2d;margin:0;padding:10px}.field{margin-bottom:12px}label{display:block;margin-bottom:4px;color:#999;font-size:11px;text-transform:uppercase}input,select{width:100%;box-sizing:border-box;padding:6px 8px;border-radius:4px;border:1px solid #444;background:#1a1a1a;color:#eee;font-size:12px}input:focus,select:focus{border-color:#0078d4;outline:none}.hint{font-size:10px;color:#777;margin-top:3px}.divider{border:0;border-top:1px solid #444;margin:14px 0}.checkbox-group{display:flex;flex-wrap:wrap;gap:6px}.checkbox-group label{display:flex;align-items:center;gap:4px;padding:4px 8px;background:#1a1a1a;border-radius:4px;cursor:pointer;text-transform:none;color:#ccc;font-size:12px}.checkbox-group input[type="checkbox"]{width:auto}.station-info{padding:6px 8px;background:#1a1a1a;border-radius:4px;margin-top:6px;color:#8bc34a;font-size:11px}</style>
+</head>
+<body>
+	<div class="field"><label>Postal Code (PLZ)</label><input type="text" id="plz" placeholder="e.g. 8002" maxlength="4" /><div class="hint">Finds the nearest SwissPollen station</div></div>
+	<hr class="divider" />
+	<div class="field"><label>Pollen Station</label><select id="station"><option value="">Loading...</option></select></div>
+	<div id="stationInfo" class="station-info" style="display: none;"></div>
+	<hr class="divider" />
+	<div class="field"><label>My Allergens</label>
+		<div class="checkbox-group" id="allergens">
+			<label><input type="checkbox" value="kabetuh0" /> Birch</label>
+			<label><input type="checkbox" value="khpoach0" /> Grasses</label>
+			<label><input type="checkbox" value="kaalnuh0" /> Alder</label>
+			<label><input type="checkbox" value="kacoryh0" /> Hazel</label>
+			<label><input type="checkbox" value="kafaguh0" /> Beech</label>
+			<label><input type="checkbox" value="kafraxh0" /> Ash</label>
+			<label><input type="checkbox" value="kaquerh0" /> Oak</label>
+		</div>
+		<div class="hint">Leave empty to show all pollen types</div>
+	</div>
+	<script>
+		var ws,uuid,ai,s={};
+		function connectElgatoStreamDeckSocket(port,u,reg,info,ais){uuid=u;ai=JSON.parse(ais);s=ai.payload.settings||{};if(s.plz)document.getElementById("plz").value=s.plz;
+			var cbs=document.querySelectorAll('#allergens input[type="checkbox"]');if(s.allergens)for(var i=0;i<cbs.length;i++)cbs[i].checked=(s.allergens||[]).indexOf(cbs[i].value)>=0;
+			ws=new WebSocket("ws://127.0.0.1:"+port);ws.onopen=function(){ws.send(JSON.stringify({event:reg,uuid:u}));send({event:"getPollenStations"})};ws.onmessage=function(e){var m=JSON.parse(e.data);if(m.event==="sendToPropertyInspector"){var d=m.payload;if(d.event==="pollenStations")pop(d.items);if(d.event==="plzResolved"&&d.station)pick(d.station)}}}
+		function pop(items){var sel=document.getElementById("station");sel.innerHTML='<option value="">-- Select station --</option>';items.forEach(function(it){var o=document.createElement("option");o.value=it.value;o.textContent=it.label;sel.appendChild(o)});if(s.pollenStationId){sel.value=s.pollenStationId;sh()}}
+		function pick(st){document.getElementById("station").value=st.id;s.pollenStationId=st.id;s.pollenStationName=st.name;s.plz=document.getElementById("plz").value||s.plz||"";save();sh()}
+		function sh(){var sel=document.getElementById("station"),info=document.getElementById("stationInfo"),o=sel.options[sel.selectedIndex];if(o&&o.value){info.textContent=o.textContent;info.style.display="block"}else{info.style.display="none"}}
+		function save(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({event:"setSettings",context:uuid,payload:s}))}
+		function send(p){if(ws&&ws.readyState===1)ws.send(JSON.stringify({event:"sendToPlugin",action:ai.action,context:uuid,payload:p}))}
+		var t;document.getElementById("plz").addEventListener("input",function(){clearTimeout(t);var v=this.value.trim();if(/^\d{4}$/.test(v))t=setTimeout(function(){send({event:"resolvePLZPollen",plz:v})},300)});
+		document.getElementById("station").addEventListener("change",function(){var o=this.options[this.selectedIndex];if(o&&o.value){s.pollenStationId=o.value;s.pollenStationName=o.textContent;save();sh()}});
+		var cbs=document.querySelectorAll('#allergens input[type="checkbox"]');for(var i=0;i<cbs.length;i++)cbs[i].addEventListener("change",function(){var sel=[];var all=document.querySelectorAll('#allergens input[type="checkbox"]');for(var j=0;j<all.length;j++)if(all[j].checked)sel.push(all[j].value);s.allergens=sel;save()});
+	</script>
+	<hr style="border:0;border-top:1px solid #444;margin:14px 0" />
+	<div style="font-size:10px;color:#666">Data: <a href="https://www.meteoswiss.admin.ch/" style="color:#777">MeteoSwiss</a> OGD &middot; <a href="https://www.swisstopo.admin.ch/" style="color:#777">swisstopo</a></div>
+</body>
+</html>
