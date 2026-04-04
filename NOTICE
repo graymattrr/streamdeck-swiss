@@ -1,0 +1,9 @@
+Swiss Deck
+Copyright 2026 Matt Ruhstaller
+
+This product includes data from the following sources:
+
+- Open-Meteo (https://open-meteo.com/) — weather forecast API
+- MeteoSwiss OGD (https://www.meteoswiss.admin.ch/) — weather station data and pollen measurements
+- OpenERZ (https://openerz.metaodi.ch/) — waste collection schedules
+- swisstopo (https://www.swisstopo.admin.ch/) — geocoding services
