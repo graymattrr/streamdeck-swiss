@@ -4,3 +4,4 @@ ch.swissdeck.plugin.sdPlugin/logs/
 *.streamDeckPlugin
 *.tgz
 .DS_Store
+CLAUDE.md
