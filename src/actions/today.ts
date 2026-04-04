@@ -46,7 +46,7 @@ export class TodayAction extends SingletonAction<TodaySettings> {
 			await this.updateButton(ev.action);
 		} else if (ev.payload.settings.plz) {
 			await streamDeck.system.openUrl(
-				`https://www.meteoswiss.admin.ch/local-forecasts/${encodeURIComponent((ev.payload.settings as Record<string, string>).municipality?.toLowerCase().replace(/\s+/g, "-") || "zurich")}/${ev.payload.settings.plz}.html#forecast-tab=weekly-overview`,
+				`https://www.meteoswiss.admin.ch/local-forecasts/${encodeURIComponent((ev.payload.settings as Record<string, string>).municipality?.toLowerCase().replace(/\s+/g, "-") || "zurich")}/${ev.payload.settings.plz}.html#forecast-tab=detail-view`,
 			);
 		}
 	}
