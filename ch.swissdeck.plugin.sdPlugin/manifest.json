@@ -9,9 +9,9 @@
 	"CodePath": "bin/plugin.js",
 	"Version": "1.0.1.0",
 	"UUID": "ch.swissdeck.plugin",
-	"SDKVersion": 2,
+	"SDKVersion": 3,
 	"Software": {
-		"MinimumVersion": "6.6"
+		"MinimumVersion": "6.9"
 	},
 	"Nodejs": {
 		"Version": "20",
