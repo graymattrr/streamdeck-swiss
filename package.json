@@ -5,11 +5,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rollup -c && cp node_modules/@elgato/streamdeck/dist/browser.js ch.swissdeck.plugin.sdPlugin/ui/sdpi.js",
+    "build": "rollup -c",
     "watch": "rollup -c -w"
   },
   "dependencies": {
-    "@elgato/streamdeck": "^1.2.0"
+    "@elgato/streamdeck": "^2.0.4"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",

@@ -1,4 +1,4 @@
-import type { JsonObject } from "@elgato/streamdeck";
+import type { JsonObject } from "@elgato/utils";
 import type { StationSettings } from "./settings.js";
 
 export const POLLEN_TYPES = {
