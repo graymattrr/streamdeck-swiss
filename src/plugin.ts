@@ -19,7 +19,7 @@ streamDeck.actions.registerAction(new WasteAction());
 streamDeck.ui.onSendToPlugin(async (ev) => {
 	const payload = ev.payload as Record<string, unknown>;
 	const reply = (data: Record<string, unknown>) => {
-		streamDeck.ui.current?.sendToPropertyInspector(data);
+		streamDeck.ui.sendToPropertyInspector(data as import("@elgato/utils").JsonValue);
 	};
 
 	try {

@@ -1,4 +1,4 @@
-import type { JsonObject } from "@elgato/streamdeck";
+import type { JsonObject } from "@elgato/utils";
 
 export const WASTE_TYPES = {
 	waste: { name: "Garbage", color: "#616161" },
