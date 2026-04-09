@@ -20,9 +20,10 @@ const LONG_PRESS_MS = 1000;
 export class PollenAction extends SingletonAction<PollenSettings> {
 	private timer: ReturnType<typeof setInterval> | null = null;
 	private keyDownTime = new Map<string, number>();
+	private updating = new Set<string>();
 
 	override async onWillAppear(ev: WillAppearEvent<PollenSettings>): Promise<void> {
-		await this.updateButton(ev.action);
+		await this.updateButton(ev.action, ev.payload.settings);
 		this.startPolling();
 	}
 
@@ -42,15 +43,16 @@ export class PollenAction extends SingletonAction<PollenSettings> {
 		this.keyDownTime.delete(ev.action.id);
 
 		if (Date.now() - downTime >= LONG_PRESS_MS) {
-			cache.invalidateAll();
-			await this.updateButton(ev.action);
+			cache.invalidateByPrefix("pollen:");
+			await this.updateButton(ev.action, ev.payload.settings);
 		} else {
 			await streamDeck.system.openUrl("https://www.meteoswiss.admin.ch/services-and-publications/applications/pollen-forecast.html#tab=pollen-map&pollen=all");
 		}
 	}
 
 	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<PollenSettings>): Promise<void> {
-		await this.updateButton(ev.action);
+		if (this.updating.has(ev.action.id)) return;
+		await this.updateButton(ev.action, ev.payload.settings);
 	}
 
 	private startPolling(): void {
@@ -60,12 +62,17 @@ export class PollenAction extends SingletonAction<PollenSettings> {
 
 	private async updateAllButtons(): Promise<void> {
 		for await (const a of this.actions) {
-			await this.updateButton(a);
+			this.updating.add(a.id);
+			try {
+				const settings = await a.getSettings();
+				await this.updateButton(a, settings);
+			} finally {
+				this.updating.delete(a.id);
+			}
 		}
 	}
 
-	private async updateButton(a: { getSettings: () => Promise<PollenSettings>; setImage: (img: string) => Promise<void> }): Promise<void> {
-		const settings = await a.getSettings();
+	private async updateButton(a: { setImage: (img: string) => Promise<void> }, settings: PollenSettings): Promise<void> {
 		if (!settings.pollenStationId) {
 			await a.setImage(encodeSvg(renderSetup()));
 			return;

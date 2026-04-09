@@ -49,30 +49,28 @@ export function findNearestPollenStation(lat: number, lon: number, stations: Pol
 
 export async function fetchPollenData(stationId: string): Promise<PollenReading | null> {
 	const cacheKey = `pollen:${stationId}`;
-	const cached = cache.get<PollenReading>(cacheKey);
-	if (cached) return cached;
 
-	const url = `${BASE}/${stationId}/ogd-pollen_${stationId}_h_recent.csv`;
-	const res = await fetch(url);
-	if (!res.ok) return null;
+	return cache.getOrFetch(cacheKey, async () => {
+		const url = `${BASE}/${stationId}/ogd-pollen_${stationId}_h_recent.csv`;
+		const res = await fetch(url);
+		if (!res.ok) throw new Error(`Pollen: ${res.status}`);
 
-	const text = await res.text();
-	const lines = text.trim().split("\n");
-	if (lines.length < 2) return null;
+		const text = await res.text();
+		const lines = text.trim().split("\n");
+		if (lines.length < 2) return null;
 
-	const headers = lines[0].split(";");
-	const lastLine = lines[lines.length - 1].split(";");
+		const headers = lines[0].split(";");
+		const lastLine = lines[lines.length - 1].split(";");
 
-	const values = {} as Record<PollenTypeKey, number>;
-	for (const col of POLLEN_COLUMNS) {
-		const idx = headers.indexOf(col);
-		values[col] = idx >= 0 ? (parseFloat(lastLine[idx]) || 0) : 0;
-	}
+		const values = {} as Record<PollenTypeKey, number>;
+		for (const col of POLLEN_COLUMNS) {
+			const idx = headers.indexOf(col);
+			values[col] = idx >= 0 ? (parseFloat(lastLine[idx]) || 0) : 0;
+		}
 
-	const timestampIdx = headers.indexOf("reference_timestamp");
-	const timestamp = timestampIdx >= 0 ? lastLine[timestampIdx] : "";
+		const timestampIdx = headers.indexOf("reference_timestamp");
+		const timestamp = timestampIdx >= 0 ? lastLine[timestampIdx] : "";
 
-	const reading: PollenReading = { timestamp, values };
-	cache.set(cacheKey, reading, CACHE_TTL);
-	return reading;
+		return { timestamp, values } as PollenReading;
+	}, CACHE_TTL);
 }

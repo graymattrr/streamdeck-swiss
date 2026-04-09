@@ -26,16 +26,13 @@ type GeoJsonResponse = {
 
 async function fetchEndpoint(dataset: string): Promise<GeoJsonResponse> {
 	const cacheKey = `meteoswiss:${dataset}`;
-	const cached = cache.get<GeoJsonResponse>(cacheKey);
-	if (cached) return cached;
 
-	const url = `${BASE}/${dataset}/${dataset}_en.json`;
-	const res = await fetch(url);
-	if (!res.ok) throw new Error(`MeteoSwiss ${dataset}: ${res.status}`);
-
-	const data = (await res.json()) as GeoJsonResponse;
-	cache.set(cacheKey, data, CACHE_TTL);
-	return data;
+	return cache.getOrFetch(cacheKey, async () => {
+		const url = `${BASE}/${dataset}/${dataset}_en.json`;
+		const res = await fetch(url);
+		if (!res.ok) throw new Error(`MeteoSwiss ${dataset}: ${res.status}`);
+		return (await res.json()) as GeoJsonResponse;
+	}, CACHE_TTL);
 }
 
 function findStation(data: GeoJsonResponse, stationId: string): GeoJsonFeature | undefined {

@@ -20,39 +20,36 @@ type OpenERZResponse = {
 
 export async function fetchWasteSchedule(plz: string, area?: string): Promise<WasteCollection[]> {
 	const cacheKey = `waste:${plz}:${area ?? "all"}`;
-	const cached = cache.get<WasteCollection[]>(cacheKey);
-	if (cached) return cached;
 
-	const today = new Date();
-	const end = new Date(today);
-	end.setDate(end.getDate() + 30);
+	return cache.getOrFetch(cacheKey, async () => {
+		const today = new Date();
+		const end = new Date(today);
+		end.setDate(end.getDate() + 30);
 
-	const params = new URLSearchParams({
-		zip: plz,
-		start: fmt(today),
-		end: fmt(end),
-		offset: "0",
-		limit: "50",
-	});
-	if (area) params.set("area", area);
+		const params = new URLSearchParams({
+			zip: plz,
+			start: fmt(today),
+			end: fmt(end),
+			offset: "0",
+			limit: "50",
+		});
+		if (area) params.set("area", area);
 
-	const res = await fetch(`${BASE}?${params}`);
-	if (!res.ok) throw new Error(`OpenERZ: ${res.status}`);
+		const res = await fetch(`${BASE}?${params}`);
+		if (!res.ok) throw new Error(`OpenERZ: ${res.status}`);
 
-	const data = (await res.json()) as OpenERZResponse;
+		const data = (await res.json()) as OpenERZResponse;
 
-	const collections: WasteCollection[] = data.result.map((e) => ({
-		date: e.date,
-		wasteType: e.waste_type as WasteTypeKey,
-		area: e.area,
-		region: e.region,
-	}));
+		const collections: WasteCollection[] = data.result.map((e) => ({
+			date: e.date,
+			wasteType: e.waste_type as WasteTypeKey,
+			area: e.area,
+			region: e.region,
+		}));
 
-	// Sort by date
-	collections.sort((a, b) => a.date.localeCompare(b.date));
-
-	cache.set(cacheKey, collections, CACHE_TTL);
-	return collections;
+		collections.sort((a, b) => a.date.localeCompare(b.date));
+		return collections;
+	}, CACHE_TTL);
 }
 
 export function getNextCollection(collections: WasteCollection[]): WasteCollection | null {

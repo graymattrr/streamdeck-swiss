@@ -20,9 +20,10 @@ const LONG_PRESS_MS = 1000;
 export class TomorrowAction extends SingletonAction<TomorrowSettings> {
 	private timer: ReturnType<typeof setInterval> | null = null;
 	private keyDownTime = new Map<string, number>();
+	private updating = new Set<string>();
 
 	override async onWillAppear(ev: WillAppearEvent<TomorrowSettings>): Promise<void> {
-		await this.updateButton(ev.action);
+		await this.updateButton(ev.action, ev.payload.settings);
 		this.startPolling();
 	}
 
@@ -42,8 +43,8 @@ export class TomorrowAction extends SingletonAction<TomorrowSettings> {
 		this.keyDownTime.delete(ev.action.id);
 
 		if (Date.now() - downTime >= LONG_PRESS_MS) {
-			cache.invalidateAll();
-			await this.updateButton(ev.action);
+			cache.invalidateByPrefix("openmeteo:");
+			await this.updateButton(ev.action, ev.payload.settings);
 		} else if (ev.payload.settings.plz) {
 			await streamDeck.system.openUrl(
 				`https://www.meteoswiss.admin.ch/local-forecasts/${encodeURIComponent((ev.payload.settings as Record<string, string>).municipality?.toLowerCase().replace(/\s+/g, "-") || "zurich")}/${ev.payload.settings.plz}.html#forecast-tab=weekly-overview`,
@@ -52,7 +53,8 @@ export class TomorrowAction extends SingletonAction<TomorrowSettings> {
 	}
 
 	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<TomorrowSettings>): Promise<void> {
-		await this.updateButton(ev.action);
+		if (this.updating.has(ev.action.id)) return;
+		await this.updateButton(ev.action, ev.payload.settings);
 	}
 
 	private startPolling(): void {
@@ -62,12 +64,17 @@ export class TomorrowAction extends SingletonAction<TomorrowSettings> {
 
 	private async updateAllButtons(): Promise<void> {
 		for await (const a of this.actions) {
-			await this.updateButton(a);
+			this.updating.add(a.id);
+			try {
+				const settings = await a.getSettings();
+				await this.updateButton(a, settings);
+			} finally {
+				this.updating.delete(a.id);
+			}
 		}
 	}
 
-	private async updateButton(a: { getSettings: () => Promise<TomorrowSettings>; setImage: (img: string) => Promise<void> }): Promise<void> {
-		const settings = await a.getSettings();
+	private async updateButton(a: { setImage: (img: string) => Promise<void> }, settings: TomorrowSettings): Promise<void> {
 		const s = settings as Record<string, unknown>;
 		const lat = s.plzLat as number || settings.stationLat;
 		const lon = s.plzLon as number || settings.stationLon;
@@ -77,7 +84,7 @@ export class TomorrowAction extends SingletonAction<TomorrowSettings> {
 		}
 
 		try {
-			const forecast = await fetchForecast(lat, lon, 2);
+			const forecast = await fetchForecast(lat, lon);
 			const tomorrow = forecast.daily[1];
 			if (!tomorrow) {
 				await a.setImage(encodeSvg(renderError("No data")));

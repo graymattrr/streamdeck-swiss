@@ -20,9 +20,10 @@ const LONG_PRESS_MS = 1000;
 export class WasteAction extends SingletonAction<WasteSettings> {
 	private timer: ReturnType<typeof setInterval> | null = null;
 	private keyDownTime = new Map<string, number>();
+	private updating = new Set<string>();
 
 	override async onWillAppear(ev: WillAppearEvent<WasteSettings>): Promise<void> {
-		await this.updateButton(ev.action);
+		await this.updateButton(ev.action, ev.payload.settings);
 		this.startPolling();
 	}
 
@@ -41,12 +42,15 @@ export class WasteAction extends SingletonAction<WasteSettings> {
 		const downTime = this.keyDownTime.get(ev.action.id) ?? Date.now();
 		this.keyDownTime.delete(ev.action.id);
 
-		cache.invalidateAll();
-		await this.updateButton(ev.action);
+		if (Date.now() - downTime >= LONG_PRESS_MS) {
+			cache.invalidateByPrefix("waste:");
+			await this.updateButton(ev.action, ev.payload.settings);
+		}
 	}
 
 	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<WasteSettings>): Promise<void> {
-		await this.updateButton(ev.action);
+		if (this.updating.has(ev.action.id)) return;
+		await this.updateButton(ev.action, ev.payload.settings);
 	}
 
 	private startPolling(): void {
@@ -56,12 +60,17 @@ export class WasteAction extends SingletonAction<WasteSettings> {
 
 	private async updateAllButtons(): Promise<void> {
 		for await (const a of this.actions) {
-			await this.updateButton(a);
+			this.updating.add(a.id);
+			try {
+				const settings = await a.getSettings();
+				await this.updateButton(a, settings);
+			} finally {
+				this.updating.delete(a.id);
+			}
 		}
 	}
 
-	private async updateButton(a: { getSettings: () => Promise<WasteSettings>; setImage: (img: string) => Promise<void> }): Promise<void> {
-		const settings = await a.getSettings();
+	private async updateButton(a: { setImage: (img: string) => Promise<void> }, settings: WasteSettings): Promise<void> {
 		if (!settings.plz) {
 			const setupSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">
 				<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">

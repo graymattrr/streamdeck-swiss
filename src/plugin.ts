@@ -9,6 +9,13 @@ import { getStations, getStation } from "./services/station-registry.js";
 import { getPollenStations, findNearestPollenStation } from "./services/pollen-client.js";
 import { resolvePostalCode } from "./services/geocoder.js";
 
+// Prevent getSettings() from echoing into onDidReceiveSettings (requires SD 7.1+).
+try {
+	streamDeck.settings.useExperimentalMessageIdentifiers = true;
+} catch {
+	// Older Stream Deck versions — our re-entrance guard handles it.
+}
+
 streamDeck.actions.registerAction(new TodayAction());
 streamDeck.actions.registerAction(new TomorrowAction());
 streamDeck.actions.registerAction(new ForecastAction());
