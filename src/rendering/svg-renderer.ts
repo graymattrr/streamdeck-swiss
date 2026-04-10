@@ -216,7 +216,7 @@ export function renderPollen(reading: PollenReading, allergens: PollenTypeKey[],
 /**
  * Waste tile: next collection with type icon, date, and countdown.
  */
-export function renderWaste(next: WasteCollection | null, upcoming: Map<string, WasteCollection>): string {
+export function renderWaste(next: WasteCollection | null, upcoming: Map<string, WasteCollection>, tomorrowTypes: WasteTypeKey[] = []): string {
 	if (!next) {
 		return svgWrap(`
 			<text x="${W / 2}" y="70" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#A0AEC0">No pickups</text>
@@ -233,6 +233,11 @@ export function renderWaste(next: WasteCollection | null, upcoming: Map<string, 
 	const sameDayTypes = Array.from(upcoming.entries())
 		.filter(([, c]) => c.date === next.date)
 		.map(([t]) => t as WasteTypeKey);
+
+	// Consecutive-day two-row layout: today + tomorrow
+	if (tomorrowTypes.length > 0) {
+		return svgWrap(renderWasteTwoRow(sameDayTypes, tomorrowTypes));
+	}
 
 	let dateLabel: string;
 	let dateColor = "#A0AEC0";
@@ -270,6 +275,36 @@ export function renderWaste(next: WasteCollection | null, upcoming: Map<string, 
 	}
 
 	return svgWrap(content);
+}
+
+function renderWasteRow(types: WasteTypeKey[], iconY: number, textX: number, labelY: number, nameY: number, dayLabel: string, dayColor: string): string {
+	if (types.length >= 2) {
+		const info1 = WASTE_TYPES[types[0]] ?? WASTE_TYPES.waste;
+		const info2 = WASTE_TYPES[types[1]] ?? WASTE_TYPES.waste;
+		const icon1 = renderWasteIcon(types[0], 22, iconY, info1.color, 0.9);
+		const icon2 = renderWasteIcon(types[1], 46, iconY, info2.color, 0.9);
+		return `
+			${icon1}
+			${icon2}
+			<text x="${textX}" y="${labelY}" font-family="sans-serif" font-size="18" font-weight="bold" fill="${dayColor}">${dayLabel}</text>
+			<text x="${textX}" y="${nameY}" font-family="sans-serif" font-size="11" fill="#A0AEC0">${info1.name} + ${info2.name}</text>
+		`;
+	}
+	const info = WASTE_TYPES[types[0]] ?? WASTE_TYPES.waste;
+	const icon = renderWasteIcon(types[0], 30, iconY, info.color, 1.2);
+	return `
+		${icon}
+		<text x="${textX}" y="${labelY}" font-family="sans-serif" font-size="18" font-weight="bold" fill="${dayColor}">${dayLabel}</text>
+		<text x="${textX}" y="${nameY}" font-family="sans-serif" font-size="14" fill="#FFFFFF">${info.name}</text>
+	`;
+}
+
+function renderWasteTwoRow(todayTypes: WasteTypeKey[], tomorrowTypes: WasteTypeKey[]): string {
+	const textX = 62;
+	const topRow = renderWasteRow(todayTypes, 28, textX, 22, 40, "Today!", "#FF8A80");
+	const separator = `<line x1="12" y1="67" x2="132" y2="67" stroke="#4A5568" stroke-width="1" opacity="0.4"/>`;
+	const bottomRow = renderWasteRow(tomorrowTypes, 96, textX, 90, 108, "Tomorrow", "#FFD180");
+	return `${topRow}${separator}${bottomRow}`;
 }
 
 

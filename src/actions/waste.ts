@@ -8,8 +8,8 @@ import streamDeck, {
 	type DidReceiveSettingsEvent,
 } from "@elgato/streamdeck";
 
-import type { WasteSettings } from "../types/waste.js";
-import { fetchWasteSchedule, getNextCollection, getUpcomingByType } from "../services/waste-client.js";
+import type { WasteSettings, WasteTypeKey } from "../types/waste.js";
+import { fetchWasteSchedule, getNextCollection, getUpcomingByType, getFollowingDayCollections } from "../services/waste-client.js";
 import { renderWaste, renderError, encodeSvg } from "../rendering/svg-renderer.js";
 import { cache } from "../services/weather-cache.js";
 
@@ -89,7 +89,20 @@ export class WasteAction extends SingletonAction<WasteSettings> {
 			const schedule = await fetchWasteSchedule(settings.plz, settings.area || undefined);
 			const next = getNextCollection(schedule);
 			const upcoming = getUpcomingByType(schedule);
-			await a.setImage(encodeSvg(renderWaste(next, upcoming)));
+
+			let tomorrowTypes: WasteTypeKey[] = [];
+			if (next) {
+				const nextDate = new Date(next.date + "T00:00:00");
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				const diffDays = Math.round((nextDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+				if (diffDays === 0) {
+					const following = getFollowingDayCollections(schedule, next.date);
+					tomorrowTypes = following.map((c) => c.wasteType);
+				}
+			}
+
+			await a.setImage(encodeSvg(renderWaste(next, upcoming, tomorrowTypes)));
 		} catch (err) {
 			streamDeck.logger.error(`Waste update failed: ${err}`);
 			await a.setImage(encodeSvg(renderError("Offline")));
