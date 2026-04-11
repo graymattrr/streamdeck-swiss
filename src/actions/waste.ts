@@ -16,7 +16,7 @@ import { cache } from "../services/weather-cache.js";
 const POLL_INTERVAL = 60 * 60 * 1000;
 const LONG_PRESS_MS = 1000;
 
-@action({ UUID: "ch.swissdeck.waste" })
+@action({ UUID: "ch.swissdeck.plugin.waste" })
 export class WasteAction extends SingletonAction<WasteSettings> {
 	private timer: ReturnType<typeof setInterval> | null = null;
 	private keyDownTime = new Map<string, number>();
