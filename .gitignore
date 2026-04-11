@@ -7,3 +7,4 @@ ch.swissdeck.plugin.sdPlugin/package-lock.json
 *.tgz
 .DS_Store
 CLAUDE.md
+marketplace/

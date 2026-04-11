@@ -132,14 +132,6 @@ function wasteSvg(S) {
 </svg>`;
 }
 
-function tariffSvg(S) {
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 20 20">
-<!-- lightning bolt -->
-<polygon points="11,1.5 5,11 9.5,11 8,18.5 15,8.5 10.5,8.5 13,1.5"
-         fill="none" stroke="#FFF" stroke-width="1.3" stroke-linejoin="round"/>
-</svg>`;
-}
-
 // ---------------------------------------------------------------------------
 // Icon definitions
 // ---------------------------------------------------------------------------
@@ -153,7 +145,6 @@ const icons = [
 	{ svg: forecastSvg, sizes: [20, 40], dir: join(IMG_DIR, "actions", "forecast"), base: "action-icon" },
 	{ svg: pollenSvg,   sizes: [20, 40], dir: join(IMG_DIR, "actions", "pollen"),   base: "action-icon" },
 	{ svg: wasteSvg,    sizes: [20, 40], dir: join(IMG_DIR, "actions", "waste"),    base: "action-icon" },
-	{ svg: tariffSvg,   sizes: [20, 40], dir: join(IMG_DIR, "actions", "tariff"),   base: "action-icon" },
 ];
 
 // ---------------------------------------------------------------------------
