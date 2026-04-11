@@ -7,7 +7,7 @@
 	"CategoryIcon": "imgs/plugin-icon",
 	"Icon": "imgs/plugin-icon",
 	"CodePath": "bin/plugin.js",
-	"Version": "1.0.2.0",
+	"Version": "1.0.3.0",
 	"UUID": "ch.swissdeck.plugin",
 	"SDKVersion": 3,
 	"Software": {
@@ -29,7 +29,7 @@
 	],
 	"Actions": [
 		{
-			"UUID": "ch.swissdeck.weather.today",
+			"UUID": "ch.swissdeck.plugin.weather.today",
 			"Name": "Weather — Today",
 			"Icon": "imgs/actions/today/action-icon",
 			"Tooltip": "Current weather — temperature, icon, daily high/low",
@@ -41,7 +41,7 @@
 			]
 		},
 		{
-			"UUID": "ch.swissdeck.weather.tomorrow",
+			"UUID": "ch.swissdeck.plugin.weather.tomorrow",
 			"Name": "Weather — Tomorrow",
 			"Icon": "imgs/actions/tomorrow/action-icon",
 			"Tooltip": "Tomorrow's forecast — icon, high/low, day name",
@@ -53,7 +53,7 @@
 			]
 		},
 		{
-			"UUID": "ch.swissdeck.weather.forecast",
+			"UUID": "ch.swissdeck.plugin.weather.forecast",
 			"Name": "Weather — Forecast",
 			"Icon": "imgs/actions/forecast/action-icon",
 			"Tooltip": "2-day weather forecast overview",
@@ -65,7 +65,7 @@
 			]
 		},
 		{
-			"UUID": "ch.swissdeck.pollen",
+			"UUID": "ch.swissdeck.plugin.pollen",
 			"Name": "Pollen",
 			"Icon": "imgs/actions/pollen/action-icon",
 			"Tooltip": "Real-time pollen intensity — color-coded by allergen",
@@ -77,7 +77,7 @@
 			]
 		},
 		{
-			"UUID": "ch.swissdeck.waste",
+			"UUID": "ch.swissdeck.plugin.waste",
 			"Name": "Waste Collection",
 			"Icon": "imgs/actions/waste/action-icon",
 			"Tooltip": "Next waste pickup — type, day, powered by OpenERZ",

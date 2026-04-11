@@ -1,11 +1,11 @@
 {
   "name": "streamdeck-swiss",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Swiss life on your Stream Deck",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && npm install --omit=dev --prefix ch.swissdeck.plugin.sdPlugin",
     "watch": "rollup -c -w"
   },
   "dependencies": {

@@ -16,7 +16,7 @@ import { cache } from "../services/weather-cache.js";
 const POLL_INTERVAL = 10 * 60 * 1000;
 const LONG_PRESS_MS = 1000;
 
-@action({ UUID: "ch.swissdeck.weather.today" })
+@action({ UUID: "ch.swissdeck.plugin.weather.today" })
 export class TodayAction extends SingletonAction<TodaySettings> {
 	private timer: ReturnType<typeof setInterval> | null = null;
 	private keyDownTime = new Map<string, number>();

@@ -1,0 +1,9 @@
+{
+  "name": "ch.swissdeck.plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@elgato/streamdeck": "^2.0.4"
+  }
+}
