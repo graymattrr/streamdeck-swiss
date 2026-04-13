@@ -1,6 +1,6 @@
 {
   "name": "streamdeck-swiss",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Swiss life on your Stream Deck",
   "private": true,
   "type": "module",

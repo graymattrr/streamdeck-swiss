@@ -9,7 +9,7 @@ import streamDeck, {
 } from "@elgato/streamdeck";
 
 import type { WasteSettings, WasteTypeKey } from "../types/waste.js";
-import { fetchWasteSchedule, getNextCollection, getUpcomingByType, getFollowingDayCollections } from "../services/waste-client.js";
+import { fetchAllPickups, getNextCollection, getUpcomingByType, getFollowingDayCollections } from "../services/waste-client.js";
 import { renderWaste, renderError, encodeSvg } from "../rendering/svg-renderer.js";
 import { cache } from "../services/weather-cache.js";
 
@@ -86,7 +86,7 @@ export class WasteAction extends SingletonAction<WasteSettings> {
 		}
 
 		try {
-			const schedule = await fetchWasteSchedule(settings.plz, settings.area || undefined);
+			const schedule = await fetchAllPickups(settings.plz, settings.area || undefined, settings.weRecyclePlan);
 			const next = getNextCollection(schedule);
 			const upcoming = getUpcomingByType(schedule);
 

@@ -12,18 +12,25 @@ export const WASTE_TYPES = {
 	special: { name: "Special", color: "#424242" },
 	eTram: { name: "E-Tram", color: "#F57C00" },
 	cargotram: { name: "Cargo Tram", color: "#F57C00" },
+	werecycle: { name: "WeRecycle", color: "#2E7D32" },
 } as const;
 
 export type WasteTypeKey = keyof typeof WASTE_TYPES;
+
+export type WasteSource = "openerz" | "werecycle";
 
 export type WasteCollection = {
 	date: string;
 	wasteType: WasteTypeKey;
 	area: string;
 	region: string;
+	source?: WasteSource;
 };
+
+export type WeRecyclePlan = "off" | "one" | "two";
 
 export type WasteSettings = JsonObject & {
 	plz: string;
 	area: string;
+	weRecyclePlan?: WeRecyclePlan;
 };

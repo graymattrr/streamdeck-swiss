@@ -3,18 +3,23 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Waste Collection — Swiss Deck</title>
-	<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px;color:#ccc;background:#2d2d2d;margin:0;padding:10px}.field{margin-bottom:12px}label{display:block;margin-bottom:4px;color:#999;font-size:11px;text-transform:uppercase}input{width:100%;box-sizing:border-box;padding:6px 8px;border-radius:4px;border:1px solid #444;background:#1a1a1a;color:#eee;font-size:12px}input:focus{border-color:#0078d4;outline:none}.hint{font-size:10px;color:#777;margin-top:3px}.divider{border:0;border-top:1px solid #444;margin:14px 0}</style>
+	<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px;color:#ccc;background:#2d2d2d;margin:0;padding:10px}.field{margin-bottom:12px}label{display:block;margin-bottom:4px;color:#999;font-size:11px;text-transform:uppercase}input,select{width:100%;box-sizing:border-box;padding:6px 8px;border-radius:4px;border:1px solid #444;background:#1a1a1a;color:#eee;font-size:12px}input:focus,select:focus{border-color:#0078d4;outline:none}.hint{font-size:10px;color:#777;margin-top:3px}.divider{border:0;border-top:1px solid #444;margin:14px 0}.optional{margin-top:18px;padding:10px;border:1px dashed #3a3a3a;border-radius:4px;background:#262626}.optional-title{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}</style>
 </head>
 <body>
 	<div class="field"><label>Postal Code (PLZ)</label><input type="text" id="plz" placeholder="e.g. 8002" maxlength="4" /><div class="hint">Supports: Zurich, Basel, St. Gallen, Thalwil, Horgen district, and more</div></div>
 	<hr class="divider" />
 	<div class="field"><label>Area (optional)</label><input type="text" id="area" placeholder="e.g. a, b, or c" maxlength="5" /><div class="hint">Some regions have sub-areas. Leave blank for all.</div></div>
+	<div class="optional">
+		<div class="optional-title">Add-on (Optional)</div>
+		<div class="field" style="margin-bottom:0"><label>WeRecycle subscription</label><select id="weRecyclePlan"><option value="off">Off</option><option value="one">Monthly (1×)</option><option value="two">Biweekly (2×)</option></select><div class="hint">Show next pickup from your <a href="https://www.werecycle.ch" style="color:#777">WeRecycle</a> subscription alongside municipal pickups.</div></div>
+	</div>
 	<script>
 		var ws,uuid,s={};
-		function connectElgatoStreamDeckSocket(port,u,reg,info,ais){uuid=u;var ai=JSON.parse(ais);s=ai.payload.settings||{};if(s.plz)document.getElementById("plz").value=s.plz;if(s.area)document.getElementById("area").value=s.area;ws=new WebSocket("ws://127.0.0.1:"+port);ws.onopen=function(){ws.send(JSON.stringify({event:reg,uuid:u}))}}
+		function connectElgatoStreamDeckSocket(port,u,reg,info,ais){uuid=u;var ai=JSON.parse(ais);s=ai.payload.settings||{};if(s.plz)document.getElementById("plz").value=s.plz;if(s.area)document.getElementById("area").value=s.area;document.getElementById("weRecyclePlan").value=s.weRecyclePlan||"off";ws=new WebSocket("ws://127.0.0.1:"+port);ws.onopen=function(){ws.send(JSON.stringify({event:reg,uuid:u}))}}
 		function save(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({event:"setSettings",context:uuid,payload:s}))}
 		document.getElementById("plz").addEventListener("change",function(){s.plz=this.value.trim();save()});
 		document.getElementById("area").addEventListener("change",function(){s.area=this.value.trim();save()});
+		document.getElementById("weRecyclePlan").addEventListener("change",function(){s.weRecyclePlan=this.value;save()});
 	</script>
 	<hr style="border:0;border-top:1px solid #444;margin:14px 0" />
 	<div style="font-size:10px;color:#666">Data: <a href="https://openerz.metaodi.ch/" style="color:#777">OpenERZ</a></div>
