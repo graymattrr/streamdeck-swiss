@@ -7,7 +7,7 @@
 	"CategoryIcon": "imgs/plugin-icon",
 	"Icon": "imgs/plugin-icon",
 	"CodePath": "bin/plugin.js",
-	"Version": "1.0.3.0",
+	"Version": "1.0.4.0",
 	"UUID": "ch.swissdeck.plugin",
 	"SDKVersion": 3,
 	"Software": {
