@@ -102,6 +102,23 @@ function lightning(cx: number, cy: number): string {
 	</g>`;
 }
 
+// WeRecycle: bag silhouette with handle (matches their green-bag branding)
+function recyclingBag(cx: number, cy: number): string {
+	return `<g fill="${F}">
+		<path d="
+			M${cx - 9},${cy - 4}
+			L${cx + 9},${cy - 4}
+			L${cx + 11},${cy + 12}
+			Q${cx + 11},${cy + 13} ${cx + 10},${cy + 13}
+			L${cx - 10},${cy + 13}
+			Q${cx - 11},${cy + 13} ${cx - 11},${cy + 12}
+			Z
+		"/>
+		<path d="M${cx - 5},${cy - 4} Q${cx - 5},${cy - 11} ${cx},${cy - 11} Q${cx + 5},${cy - 11} ${cx + 5},${cy - 4}" fill="none" stroke="${F}" stroke-width="2"/>
+		<text x="${cx}" y="${cy + 9}" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a2e">♻</text>
+	</g>`;
+}
+
 // Warning triangle
 function warning(cx: number, cy: number): string {
 	return `<g>
@@ -122,6 +139,7 @@ export const WASTE_ICONS: Record<string, (cx: number, cy: number) => string> = {
 	special: warning,
 	eTram: lightning,
 	cargotram: lightning,
+	werecycle: recyclingBag,
 };
 
 export function renderWasteIcon(type: string, cx: number, cy: number, color?: string, scale: number = 1): string {

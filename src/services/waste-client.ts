@@ -1,7 +1,8 @@
-import type { WasteCollection, WasteTypeKey } from "../types/waste.js";
+import type { WasteCollection, WasteTypeKey, WeRecyclePlan } from "../types/waste.js";
 import { cache } from "./weather-cache.js";
 
 const BASE = "https://openerz.metaodi.ch/api/calendar.json";
+const WERECYCLE_BASE = "https://www.werecycle.ch/wp-content/plugins/zpt-region-pickup-dates/includes/ajax.php";
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const CUTOFF_HOUR = 15; // 3 PM — collections are done by this time
 
@@ -46,11 +47,104 @@ export async function fetchWasteSchedule(plz: string, area?: string): Promise<Wa
 			wasteType: e.waste_type as WasteTypeKey,
 			area: e.area,
 			region: e.region,
+			source: "openerz",
 		}));
 
 		collections.sort((a, b) => a.date.localeCompare(b.date));
 		return collections;
 	}, CACHE_TTL);
+}
+
+type WeRecycleEntry = {
+	zip: string;
+	dates: { date1: string; date2: string };
+	pickup: "one" | "two";
+};
+
+type WeRecycleResponse = {
+	type: "success" | string;
+	msg?: WeRecycleEntry[];
+};
+
+const MONTHS: Record<string, number> = {
+	jan: 0, january: 0, januar: 0,
+	feb: 1, february: 1, februar: 1,
+	mar: 2, march: 2, mär: 2, maerz: 2, märz: 2,
+	apr: 3, april: 3,
+	may: 4, mai: 4,
+	jun: 5, june: 5, juni: 5,
+	jul: 6, july: 6, juli: 6,
+	aug: 7, august: 7,
+	sep: 8, sept: 8, september: 8,
+	oct: 9, october: 9, okt: 9, oktober: 9,
+	nov: 10, november: 10,
+	dec: 11, december: 11, dez: 11, dezember: 11,
+};
+
+function parseWeRecycleDate(s: string): string | null {
+	const trimmed = s.trim();
+	if (!trimmed) return null;
+	// Format: "16. Apr 2026" (EN) or "16. Mai 2026" (DE)
+	const m = trimmed.match(/^(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\.?\s+(\d{4})$/);
+	if (!m) return null;
+	const day = parseInt(m[1], 10);
+	const monthIdx = MONTHS[m[2].toLowerCase()];
+	const year = parseInt(m[3], 10);
+	if (monthIdx === undefined || isNaN(day) || isNaN(year)) return null;
+	const mm = String(monthIdx + 1).padStart(2, "0");
+	const dd = String(day).padStart(2, "0");
+	return `${year}-${mm}-${dd}`;
+}
+
+export async function fetchWeRecyclePickup(plz: string, plan: "one" | "two"): Promise<WasteCollection | null> {
+	const cacheKey = `waste:werecycle:${plz}:${plan}`;
+	try {
+		return await cache.getOrFetch(cacheKey, async () => {
+			const body = new URLSearchParams({ zpt_get_zip_code_data: "true", data: plz }).toString();
+			const res = await fetch(WERECYCLE_BASE, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+					"X-Requested-With": "XMLHttpRequest",
+					"Referer": "https://www.werecycle.ch/en/abholdaten/",
+				},
+				body,
+			});
+			if (!res.ok) throw new Error(`WeRecycle: ${res.status}`);
+
+			const data = (await res.json()) as WeRecycleResponse;
+			if (data.type !== "success" || !Array.isArray(data.msg)) return null;
+
+			const entry = data.msg.find((e) => e.zip === plz && e.pickup === plan);
+			if (!entry) return null;
+
+			const next = parseWeRecycleDate(entry.dates.date1) ?? parseWeRecycleDate(entry.dates.date2);
+			if (!next) return null;
+
+			return {
+				date: next,
+				wasteType: "werecycle" as WasteTypeKey,
+				area: "",
+				region: "",
+				source: "werecycle",
+			};
+		}, CACHE_TTL);
+	} catch {
+		return null;
+	}
+}
+
+export async function fetchAllPickups(plz: string, area?: string, weRecyclePlan?: WeRecyclePlan): Promise<WasteCollection[]> {
+	const cached = await fetchWasteSchedule(plz, area);
+	if (!weRecyclePlan || weRecyclePlan === "off") return cached;
+
+	const wr = await fetchWeRecyclePickup(plz, weRecyclePlan);
+	if (!wr) return cached;
+
+	// Copy to avoid mutating the cached OpenERZ array.
+	const merged = [...cached, wr];
+	merged.sort((a, b) => a.date.localeCompare(b.date));
+	return merged;
 }
 
 export function getNextCollection(collections: WasteCollection[]): WasteCollection | null {
