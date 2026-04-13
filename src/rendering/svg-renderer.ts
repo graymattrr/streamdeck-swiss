@@ -300,9 +300,12 @@ function renderWasteRow(types: WasteTypeKey[], iconY: number, labelY: number, na
 }
 
 function renderWasteTwoRow(todayTypes: WasteTypeKey[], tomorrowTypes: WasteTypeKey[]): string {
+	const tomorrow = new Date();
+	tomorrow.setDate(tomorrow.getDate() + 1);
+	const tomorrowLabel = tomorrow.toLocaleDateString("en-US", { weekday: "short" });
 	const topRow = renderWasteRow(todayTypes, 36, 32, 54, "Today!", "#FF8A80");
 	const separator = `<line x1="12" y1="72" x2="132" y2="72" stroke="#4A5568" stroke-width="1" opacity="0.4"/>`;
-	const bottomRow = renderWasteRow(tomorrowTypes, 108, 104, 126, "Tmrw", "#FFD180");
+	const bottomRow = renderWasteRow(tomorrowTypes, 108, 104, 126, tomorrowLabel, "#FFD180");
 	return `${topRow}${separator}${bottomRow}`;
 }
 
