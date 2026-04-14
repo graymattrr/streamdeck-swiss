@@ -145,13 +145,27 @@ export function renderPollen(reading: PollenReading, allergens: PollenTypeKey[],
 	const overallColor = getPollenColor(overallLevel);
 
 	if (elevated.length === 0) {
-		// All clear — big green dot with checkmark
+		// All clear — soft blue clouds
+		const cx = W / 2;
+		const cloud = `
+			<g fill="#FFFFFF" opacity="0.92">
+				<ellipse cx="${cx - 14}" cy="60" rx="18" ry="12"/>
+				<ellipse cx="${cx + 6}" cy="55" rx="14" ry="11"/>
+				<ellipse cx="${cx + 20}" cy="62" rx="13" ry="10"/>
+				<rect x="${cx - 30}" y="60" width="56" height="14" rx="7"/>
+			</g>
+			<g fill="#E3F2FD" opacity="0.85">
+				<ellipse cx="${cx + 24}" cy="82" rx="12" ry="8"/>
+				<ellipse cx="${cx + 36}" cy="84" rx="9" ry="7"/>
+				<rect x="${cx + 16}" y="82" width="26" height="10" rx="5"/>
+			</g>
+		`;
 		return svgWrap(`
-			<text x="${W / 2}" y="20" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#718096">Pollen</text>
-			<circle cx="${W / 2}" cy="58" r="24" fill="${overallColor}" opacity="0.9"/>
-			<path d="M${W / 2 - 10},${58} L${W / 2 - 3},${65} L${W / 2 + 12},${48}" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-			<text x="${W / 2}" y="108" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#A0AEC0">All clear</text>
-			${stationName ? `<text x="${W / 2}" y="126" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#718096">${stationName}</text>` : ""}
+			<rect x="0" y="0" width="${W}" height="34" rx="0" fill="#4A90E2" opacity="0.22"/>
+			<text x="10" y="24" font-family="sans-serif" font-size="20" font-weight="bold" fill="#7FB3E8">Pollen</text>
+			${cloud}
+			<text x="${cx}" y="112" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="bold" fill="#E2E8F0">All clear</text>
+			${stationName ? `<text x="${cx}" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#718096">${stationName}</text>` : ""}
 		`);
 	}
 
