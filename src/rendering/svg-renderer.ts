@@ -161,7 +161,8 @@ export function renderPollen(reading: PollenReading, allergens: PollenTypeKey[],
 			</g>
 		`;
 		return svgWrap(`
-			<text x="${cx}" y="20" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#718096">Pollen</text>
+			<rect x="0" y="0" width="${W}" height="34" rx="0" fill="#4A90E2" opacity="0.22"/>
+			<text x="10" y="24" font-family="sans-serif" font-size="20" font-weight="bold" fill="#7FB3E8">Pollen</text>
 			${cloud}
 			<text x="${cx}" y="112" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="bold" fill="#E2E8F0">All clear</text>
 			${stationName ? `<text x="${cx}" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#718096">${stationName}</text>` : ""}
