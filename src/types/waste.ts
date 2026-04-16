@@ -13,6 +13,10 @@ export const WASTE_TYPES = {
 	eTram: { name: "E-Tram", color: "#F57C00" },
 	cargotram: { name: "Cargo Tram", color: "#F57C00" },
 	werecycle: { name: "WeRecycle", color: "#2E7D32" },
+	chipping_service: { name: "Chipping", color: "#9CCD4A" },
+	mobile: { name: "Mobile", color: "#4FC3F7" },
+	oekibus: { name: "Ökibus", color: "#FF7043" },
+	unknown: { name: "Unknown", color: "#9E9E9E" },
 } as const;
 
 export type WasteTypeKey = keyof typeof WASTE_TYPES;

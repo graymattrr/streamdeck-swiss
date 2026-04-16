@@ -260,15 +260,15 @@ export function renderWaste(next: WasteCollection | null, upcoming: Map<string, 
 	else { dateLabel = date.toLocaleDateString("en-US", { weekday: "long" }); }
 
 	const isEveBefore = diffDays === 1 || (diffDays === 0 && new Date().getHours() >= 18);
-	const mainColor = WASTE_TYPES[sameDayTypes[0]] ?? WASTE_TYPES.waste;
+	const mainColor = WASTE_TYPES[sameDayTypes[0]] ?? WASTE_TYPES.unknown;
 	const urgencyColor = diffDays === 0 ? "#F44336" : isEveBefore ? "#FF9800" : mainColor.color;
 
 	let content: string;
 
 	if (sameDayTypes.length >= 2) {
 		// Two colored icons side by side, no circles
-		const info1 = WASTE_TYPES[sameDayTypes[0]] ?? WASTE_TYPES.waste;
-		const info2 = WASTE_TYPES[sameDayTypes[1]] ?? WASTE_TYPES.waste;
+		const info1 = WASTE_TYPES[sameDayTypes[0]] ?? WASTE_TYPES.unknown;
+		const info2 = WASTE_TYPES[sameDayTypes[1]] ?? WASTE_TYPES.unknown;
 		const icon1 = renderWasteIcon(sameDayTypes[0], W / 2 - 28, 30, info1.color, 1.4);
 		const icon2 = renderWasteIcon(sameDayTypes[1], W / 2 + 28, 30, info2.color, 1.4);
 		content = `
@@ -279,7 +279,7 @@ export function renderWaste(next: WasteCollection | null, upcoming: Map<string, 
 		`;
 	} else {
 		// Single colored icon centered, no circle
-		const info = WASTE_TYPES[next.wasteType] ?? WASTE_TYPES.waste;
+		const info = WASTE_TYPES[next.wasteType] ?? WASTE_TYPES.unknown;
 		const wasteIcon = renderWasteIcon(next.wasteType, W / 2, 30, info.color, 1.8);
 		content = `
 			${wasteIcon}
@@ -293,8 +293,8 @@ export function renderWaste(next: WasteCollection | null, upcoming: Map<string, 
 
 function renderWasteRow(types: WasteTypeKey[], iconY: number, labelY: number, nameY: number, dayLabel: string, dayColor: string): string {
 	if (types.length >= 2) {
-		const info1 = WASTE_TYPES[types[0]] ?? WASTE_TYPES.waste;
-		const info2 = WASTE_TYPES[types[1]] ?? WASTE_TYPES.waste;
+		const info1 = WASTE_TYPES[types[0]] ?? WASTE_TYPES.unknown;
+		const info2 = WASTE_TYPES[types[1]] ?? WASTE_TYPES.unknown;
 		const icon1 = renderWasteIcon(types[0], 18, iconY, info1.color, 0.85);
 		const icon2 = renderWasteIcon(types[1], 38, iconY, info2.color, 0.85);
 		return `
@@ -304,7 +304,7 @@ function renderWasteRow(types: WasteTypeKey[], iconY: number, labelY: number, na
 			<text x="58" y="${nameY}" font-family="sans-serif" font-size="12" fill="#A0AEC0">${info1.name} + ${info2.name}</text>
 		`;
 	}
-	const info = WASTE_TYPES[types[0]] ?? WASTE_TYPES.waste;
+	const info = WASTE_TYPES[types[0]] ?? WASTE_TYPES.unknown;
 	const icon = renderWasteIcon(types[0], 22, iconY, info.color, 1.0);
 	return `
 		${icon}
