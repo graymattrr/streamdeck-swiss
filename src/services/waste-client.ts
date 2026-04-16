@@ -50,9 +50,39 @@ export async function fetchWasteSchedule(plz: string, area?: string): Promise<Wa
 			source: "openerz",
 		}));
 
+		detectChippingDeadlines(collections);
 		collections.sort((a, b) => a.date.localeCompare(b.date));
 		return collections;
 	}, CACHE_TTL);
+}
+
+// OpenERZ emits both chipping pickups AND registration deadlines as "chipping_service"
+// with no distinguishing field. Municipalities using the deadline pattern emit them as
+// close pairs sharing (region, area); zoned municipalities use different area values.
+// Reclassify the earlier of each pair as "chipping_deadline".
+function detectChippingDeadlines(collections: WasteCollection[]): void {
+	const WINDOW_DAYS = 14;
+	const chipping = collections
+		.map((c, i) => ({ c, i }))
+		.filter(({ c }) => c.wasteType === "chipping_service");
+
+	for (const { c, i } of chipping) {
+		const d = new Date(c.date + "T00:00:00");
+		d.setDate(d.getDate() + WINDOW_DAYS);
+		const cutoffStr = fmt(d);
+
+		const hasLaterPair = chipping.some(({ c: other }) =>
+			other !== c
+			&& other.area === c.area
+			&& other.region === c.region
+			&& other.date > c.date
+			&& other.date <= cutoffStr,
+		);
+
+		if (hasLaterPair) {
+			collections[i] = { ...c, wasteType: "chipping_deadline" };
+		}
+	}
 }
 
 type WeRecycleEntry = {
