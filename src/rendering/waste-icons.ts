@@ -129,6 +129,16 @@ function leafySprig(cx: number, cy: number): string {
 	</g>`;
 }
 
+// Chipping registration deadline: outlined sprig (mirrors official white-H-in-circle convention)
+function leafySprigOutline(cx: number, cy: number): string {
+	return `<g fill="none" stroke="${F}" stroke-width="1.6" stroke-linejoin="round">
+		<path d="M${cx - 2},${cy + 13} Q${cx},${cy} ${cx + 2},${cy - 13} L${cx + 2},${cy - 13} Q${cx - 1},${cy} ${cx - 2},${cy + 13} Z"/>
+		<path d="M${cx + 1},${cy - 8} Q${cx + 11},${cy - 11} ${cx + 11},${cy - 2} Q${cx + 4},${cy - 3} ${cx + 1},${cy - 8} Z"/>
+		<path d="M${cx - 1},${cy - 1} Q${cx - 11},${cy - 4} ${cx - 11},${cy + 5} Q${cx - 4},${cy + 4} ${cx - 1},${cy - 1} Z"/>
+		<path d="M${cx + 1},${cy + 6} Q${cx + 10},${cy + 3} ${cx + 10},${cy + 12} Q${cx + 4},${cy + 11} ${cx + 1},${cy + 6} Z"/>
+	</g>`;
+}
+
 // Mobile recycling station: truck silhouette (Mobile-Recyclinghof)
 function truck(cx: number, cy: number): string {
 	return `<g fill="${F}">
@@ -179,6 +189,7 @@ export const WASTE_ICONS: Record<string, (cx: number, cy: number) => string> = {
 	cargotram: lightning,
 	werecycle: recyclingBag,
 	chipping_service: leafySprig,
+	chipping_deadline: leafySprigOutline,
 	mobile: truck,
 	oekibus: hazardTruck,
 	unknown: questionCircle,
