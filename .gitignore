@@ -3,6 +3,7 @@ ch.swissdeck.plugin.sdPlugin/bin/
 ch.swissdeck.plugin.sdPlugin/logs/
 ch.swissdeck.plugin.sdPlugin/node_modules/
 ch.swissdeck.plugin.sdPlugin/package-lock.json
+logs/
 *.streamDeckPlugin
 *.tgz
 .DS_Store
