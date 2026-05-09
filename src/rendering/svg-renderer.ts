@@ -250,7 +250,10 @@ export function renderWaste(next: WasteCollection | null, upcoming: Map<string, 
 
 	// Consecutive-day two-row layout: today + tomorrow
 	if (tomorrowTypes.length > 0) {
-		return svgWrap(renderWasteTwoRow(sameDayTypes, tomorrowTypes));
+		const tomorrow = new Date();
+		tomorrow.setDate(tomorrow.getDate() + 1);
+		const tomorrowLabel = tomorrow.toLocaleDateString("en-US", { weekday: "short" });
+		return svgWrap(renderWasteTwoRow(sameDayTypes, "Today!", "#FF8A80", tomorrowTypes, tomorrowLabel, "#FFD180"));
 	}
 
 	let dateLabel: string;
@@ -313,13 +316,10 @@ function renderWasteRow(types: WasteTypeKey[], iconY: number, labelY: number, na
 	`;
 }
 
-function renderWasteTwoRow(todayTypes: WasteTypeKey[], tomorrowTypes: WasteTypeKey[]): string {
-	const tomorrow = new Date();
-	tomorrow.setDate(tomorrow.getDate() + 1);
-	const tomorrowLabel = tomorrow.toLocaleDateString("en-US", { weekday: "short" });
-	const topRow = renderWasteRow(todayTypes, 36, 32, 54, "Today!", "#FF8A80");
+function renderWasteTwoRow(topTypes: WasteTypeKey[], topLabel: string, topColor: string, bottomTypes: WasteTypeKey[], bottomLabel: string, bottomColor: string): string {
+	const topRow = renderWasteRow(topTypes, 36, 32, 54, topLabel, topColor);
 	const separator = `<line x1="12" y1="72" x2="132" y2="72" stroke="#4A5568" stroke-width="1" opacity="0.4"/>`;
-	const bottomRow = renderWasteRow(tomorrowTypes, 108, 104, 126, tomorrowLabel, "#FFD180");
+	const bottomRow = renderWasteRow(bottomTypes, 108, 104, 126, bottomLabel, bottomColor);
 	return `${topRow}${separator}${bottomRow}`;
 }
 
