@@ -1,3 +1,4 @@
+import streamDeck from "@elgato/streamdeck";
 import type { WasteCollection, WasteTypeKey, WeRecyclePlan } from "../types/waste.js";
 import { cache } from "./weather-cache.js";
 
@@ -143,14 +144,25 @@ export async function fetchWeRecyclePickup(plz: string, plan: "one" | "two"): Pr
 			if (!res.ok) throw new Error(`WeRecycle: ${res.status}`);
 
 			const data = (await res.json()) as WeRecycleResponse;
-			if (data.type !== "success" || !Array.isArray(data.msg)) return null;
+			if (data.type !== "success" || !Array.isArray(data.msg)) {
+				streamDeck.logger.warn(`WeRecycle ${plz}/${plan}: unexpected response shape: ${JSON.stringify(data).slice(0, 200)}`);
+				return null;
+			}
 
 			const entry = data.msg.find((e) => e.zip === plz && e.pickup === plan);
-			if (!entry) return null;
+			if (!entry) {
+				const available = data.msg.map((e) => `${e.zip}/${e.pickup}`).join(", ") || "none";
+				streamDeck.logger.warn(`WeRecycle ${plz}/${plan}: no matching entry (available: ${available})`);
+				return null;
+			}
 
 			const next = parseWeRecycleDate(entry.dates.date1) ?? parseWeRecycleDate(entry.dates.date2);
-			if (!next) return null;
+			if (!next) {
+				streamDeck.logger.warn(`WeRecycle ${plz}/${plan}: could not parse dates date1="${entry.dates.date1}" date2="${entry.dates.date2}"`);
+				return null;
+			}
 
+			streamDeck.logger.info(`WeRecycle ${plz}/${plan}: next pickup ${next}`);
 			return {
 				date: next,
 				wasteType: "werecycle" as WasteTypeKey,
@@ -159,7 +171,8 @@ export async function fetchWeRecyclePickup(plz: string, plan: "one" | "two"): Pr
 				source: "werecycle",
 			};
 		}, CACHE_TTL);
-	} catch {
+	} catch (err) {
+		streamDeck.logger.error(`WeRecycle ${plz}/${plan} fetch failed: ${err}`);
 		return null;
 	}
 }
